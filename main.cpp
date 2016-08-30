@@ -49,7 +49,7 @@ int main()
 
     int nx=800;     //x-resolution
     int ny=400;     //y-resolution
-    int ns = 50;   //number of samples per pixel
+    int ns = 20;   //number of samples per pixel
 
     fout<<"P3\n"<< nx << " " << ny << "\n255\n";
     vec3 lower_left_corner(-2.0f, -1.0f, -1.0f);
@@ -57,11 +57,12 @@ int main()
     vec3 vertical(0.0f, 2.0f, 0.0f);
     vec3 origin(0.0f);
 
-    hitable *list[2];
+    hitable *list[4];
+    list[3] = new sphere(vec3(-0.3f, 0.4f, -1.1f), 0.2);
     list[0] = new sphere(vec3(0.0f, -100.5f, -1.0f), 100.0);
-    list[1] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5);
-
-    hitable *world = new hitable_list(list, 2);
+    list[2] = new sphere(vec3(0.0f, 0.0f, -1.0f), 0.5);
+    list[1] = new sphere(vec3(0.3f, 0.4f, -0.9f), 0.2);
+    hitable *world = new hitable_list(list, 4);
 
     Camera cam;
     for(int j=ny-1; j>=0; j--)
@@ -76,7 +77,7 @@ int main()
                 float v = float(j + drand48())/float(ny);
                 ray r=cam.get_ray(u, v);
                 //color takes a ray, a world, and tells us color of where it hits
-                col += color(r, world, 150);
+                col += color(r, world, 30);
 
             }
             col /= float(ns);
