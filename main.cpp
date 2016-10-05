@@ -8,6 +8,7 @@
 #include "hitable_list.hpp"
 #include "sphere.hpp"
 #include "camera.h"
+#include <future>
 
 using namespace std;
 using namespace glm;
@@ -25,7 +26,7 @@ vec3 random_point_in_unit_sphere()
     return p;
 }
 
-vec3 color(const ray& r, hitable *world, int numBounces)
+vec3 color(const ray& r, const hitable *world, int numBounces)
 {
     hit_record rec;
     if((numBounces>0) && world->hit(r, 0.001, numeric_limits<float>::max(), rec))
@@ -49,8 +50,8 @@ int main()
     ofstream fout;
     fout.open("picture.ppm");
 
-    int nx=800;     //x-resolution
-    int ny=400;     //y-resolution
+    int nx=200;     //x-resolution
+    int ny=200;     //y-resolution
     int ns = 50;   //number of samples per pixel
 
     fout<<"P3\n"<< nx << " " << ny << "\n255\n";
@@ -71,17 +72,21 @@ int main()
         for(int i=0;i < nx; ++i)
         {
             //Take multiple samples per pixel, for antialiasing
-            vec3 col = vec3(0.0f, 0.0f, 0.0f);
+            vec3 col1 = vec3(0.0f, 0.0f, 0.0f);
+            vec3 col2 = vec3(0.0f, 0.0f, 0.0f);
             for(int sample = 0; sample < ns; ++sample)
             {
                 float u = float(i + drand48())/float(nx);
+                float a = float(i + drand48())/float(nx);
                 float v = float(j + drand48())/float(ny);
-                ray r=cam.get_ray(u, v);
+                float b = float(j + drand48())/float(ny);
+                ray r1=cam.get_ray(u, v);
+                ray r2=cam.get_ray(a, b);
                 //color takes a ray, a world, and tells us color of where it hits
-                col += color(r, world, 150);
-
+                col1 += std::async(std::launch::async, color, r1, world, 150).get();
+                col2 += std::async(std::launch::async, color, r2, world, 150).get();
             }
-            col /= float(ns);
+            auto col = ((col1 + col2) /float(2*ns));
             int ir = int(255.99*col.r);
             int ig = int(255.99*col.g);
             int ib = int(255.99*col.b);
